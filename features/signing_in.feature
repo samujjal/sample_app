@@ -6,7 +6,7 @@ Feature: Signing in
     Then they should see an error message
 
   Scenario: Successful signin
-    Given a suer visits the signin page
+    Given a user visits the signin page
     And the user has an account
     When the user submits valid signing information
     Then they should see their profile page
