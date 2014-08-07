@@ -10,6 +10,21 @@
 
 include ApplicationHelper
 
+def invalid_signup
+  fill_in "Name", with: ""
+  fill_in "Email", with: "user@example,com"
+  fill_in "Password", with: "foobar"
+  fill_in "Confirmation", with: "notfoobar"
+  click_button submit
+end
+
+def valid_signup
+  fill_in "Name",         with: "Example User"
+  fill_in "Email",        with: "user@example.com"
+  fill_in "Password",      with: "foobar"
+  fill_in "Confirmation",  with: "foobar"
+end
+
 def valid_signin(user)
   fill_in "Email",    with: user.email
   fill_in "Password", with: user.password

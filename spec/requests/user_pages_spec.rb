@@ -22,13 +22,8 @@ describe "User pages" do
       end
 
       describe "after submission" do
-        before do
-          fill_in "Name", with: ""
-          fill_in "Email", with: "user@example,com"
-          fill_in "Password", with: "foobar"
-          fill_in "Confirmation", with: "notfoobar"
-          click_button submit
-        end
+        before {invalid_signup}
+
         it {should have_title('Sign up')}
         it {should have_content('error')}
         it {should have_content("Name can't be blank")}
@@ -38,12 +33,7 @@ describe "User pages" do
     end
 
     describe "with valid information" do
-        before do
-          fill_in "Name",         with: "Example User"
-          fill_in "Email",        with: "user@example.com"
-          fill_in "Password",      with: "foobar"
-          fill_in "Confirmation",  with: "foobar"
-        end
+        before {valid_signup}
 
         it "should create a user" do
           expect {click_button submit}.to change(User, :count).by(1)
