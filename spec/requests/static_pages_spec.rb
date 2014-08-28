@@ -30,6 +30,34 @@ describe "Static pages" do
       click_link "sample app"
       expect(page).to have_selector('#logo')
     end
+
+    describe "for signed-in users" do
+      let(:user) { FactoryGirl.create(:user)}
+      before do
+        31.times {FactoryGirl.create(:micropost, user: user, content: "Blah Blah")}
+        valid_signin user
+        visit root_path
+      end
+      after(:all) { user.microposts.delete_all unless user.microposts.nil? }
+
+      describe "micropost feed" do
+
+        it "should have the right micropost count" do
+          expect(page).to have_content(user.feed.count)
+          expect(page).to have_content("micropost".pluralize(user.feed.count))
+        end
+
+        describe "pagination" do
+          it {should have_selector('div.pagination')}
+
+          it "should render the user's feed" do
+            user.feed.paginate(page: 1).each do |item|
+              expect(page).to have_selector("li##{item.id}", text: item.content)
+            end
+          end
+        end
+      end
+    end
   end
 
   describe "Help page" do
