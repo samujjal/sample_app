@@ -54,9 +54,7 @@ describe "User pages" do
         end
         it { should_not have_link('delete', href: user_path(admin))}
       end
-
     end
-
   end
 
 
@@ -66,49 +64,47 @@ describe "User pages" do
     it {should have_content('Sign up')}
     it {should have_title(full_title('Sign up'))}
 
-  describe "signup" do
+    describe "signup" do
 
-    before { visit signup_path}
+      before { visit signup_path}
 
-    let(:submit) { "Create my account"}
+      let(:submit) { "Create my account"}
 
-    describe "with invalid information" do
-      it "should not create a user" do
-        expect { click_button submit}.not_to change(User, :count)
-      end
-
-      describe "after submission" do
-        before {invalid_signup}
-
-        it {should have_title('Sign up')}
-        it {should have_content('error')}
-        it {should have_content("Name can't be blank")}
-        it {should have_content('Email is invalid')}
-        it {should have_content("Password confirmation doesn't match Password")}
-      end
-    end
-
-    describe "with valid information" do
-        before {valid_signup}
-
-        it "should create a user" do
-          expect {click_button submit}.to change(User, :count).by(1)
+      describe "with invalid information" do
+        it "should not create a user" do
+          expect { click_button submit}.not_to change(User, :count)
         end
 
-        describe "after saving the user" do
-          before {click_button submit}
-          let(:user) {User.find_by(email: 'user@example.com')}
+        describe "after submission" do
+          before {invalid_signup}
 
-          it { should have_link('Sign out')}
-          it { should have_title(user.name)}
-          it { should have_selector('div.alert.alert-success', text: 'Welcome')}
+          it {should have_title('Sign up')}
+          it {should have_content('error')}
+          it {should have_content("Name can't be blank")}
+          it {should have_content('Email is invalid')}
+          it {should have_content("Password confirmation doesn't match Password")}
         end
-
       end
-    end
+
+      describe "with valid information" do
+          before {valid_signup}
+
+          it "should create a user" do
+            expect {click_button submit}.to change(User, :count).by(1)
+          end
+
+          describe "after saving the user" do
+            before {click_button submit}
+            let(:user) {User.find_by(email: 'user@example.com')}
+
+            it { should have_link('Sign out')}
+            it { should have_title(user.name)}
+            it { should have_selector('div.alert.alert-success', text: 'Welcome')}
+          end
+
+        end
+      end
   end
-
-
 
   describe "profile page" do
     let(:user) { FactoryGirl.create(:user)}
@@ -124,6 +120,56 @@ describe "User pages" do
       it { should have_content(m1.content) }
       it { should have_content(m2.content) }
       it { should have_content(user.microposts.count)}
+    end
+
+    describe "follow/unfollow buttons" do
+      let(:other_user) { FactoryGirl.create(:user)}
+      before { valid_signin user}
+
+      describe "following a user" do
+        before { visit user_path(other_user)}
+
+        it "should increment the followed user count" do
+          expect do
+            click_button "Follow"
+          end.to change(user.followed_users, :count).by(1)
+        end
+
+        it "should increment the other users followers' count" do
+          expect do
+            click_button "Follow"
+          end.to change(other_user.followers, :count).by(1)
+        end
+
+        describe "toggling the button" do
+          before { click_button "Follow"}
+          it { should have_xpath("//input[@value='Unfollow']") }
+        end
+      end
+
+      describe "unfollowing a user" do
+        before do
+          user.follow!(other_user)
+          visit user_path(other_user)
+        end
+
+        it "should decrement the followed user count" do
+          expect do
+            click_button "Unfollow"
+          end.to change(user.followed_users, :count).by(-1)
+        end
+
+        it "should decrement the other user's followers count" do
+          expect do
+            click_button "Unfollow"
+          end.to change(other_user.followers, :count).by(-1)
+        end
+
+        describe "toggling the button" do
+          before { click_button "Unfollow" }
+          it { should have_xpath("//input[@value='Follow']") }
+        end
+      end
     end
   end
 
@@ -181,6 +227,34 @@ describe "User pages" do
 
       end
 
+    end
+  end
+
+  describe "following/followers" do
+    let(:user) { FactoryGirl.create(:user) }
+    let(:other_user) { FactoryGirl.create(:user) }
+    before { user.follow!(other_user)}
+
+    describe "followed users" do
+      before do
+        valid_signin user
+        visit following_user_path(user)
+      end
+
+      it { should have_title(full_title('Following'))}
+      it { should have_selector('h3', text: 'Following')}
+      it { should have_link(other_user.name, href: user_path(other_user))}
+    end
+
+    describe "followers" do
+      before do
+        valid_signin other_user
+        visit followers_user_path(other_user)
+      end
+
+      it { should have_title(full_title('Followers'))}
+      it { should have_selector('h3', text: 'Followers')}
+      it { should have_link(user.name, href: user_path(user))}
     end
   end
 end
